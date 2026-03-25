@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>퇴근보고</title>
+
+<style>
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background: #f5f6fa;
+  padding: 0;
+}
+
+.container {
+  width: 100%;
+  background: white;
+  padding: 14px;
+}
+
+h2 {
+  margin: 0 0 20px 0;
+  font-size: 22px;
+}
+
+label.main-label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+select, textarea {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 20px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+.section {
+  margin-bottom: 26px;
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 12px;
+}
+
+.room-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.room-type {
+  width: 70px;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.room-options {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px 10px;
+}
+
+.room-options label {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  white-space: nowrap;
+  font-size: 14px;
+}
+
+.room-options input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+}
+
+.message-line {
+  text-align: center;
+  font-size: 14px;
+  margin: 10px 0;
+}
+
+button {
+  width: 100%;
+  padding: 15px;
+  background: black;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+}
+
+#donePage {
+  display: none;
+  min-height: 100vh;
+  background: white;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.done-message {
+  font-size: 22px;
+  font-weight: bold;
+  line-height: 1.7;
+  white-space: pre-line;
+  margin-top: 60px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container" id="formPage">
+
+  <h2>퇴근보고</h2>
+
+  <label class="main-label">근로자</label>
+  <select id="worker">
+    <option value="">선택하세요</option>
+    <option>직원1</option>
+    <option>직원2</option>
+    <option>직원3</option>
+  </select>
+
+  <div class="section">
+    <div class="section-title">체크인 완료 (<span id="checkinDoneCount">0</span>)</div>
+    <div id="checkinDone"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">체크인 예정 (<span id="checkinPlannedCount">0</span>)</div>
+    <div id="checkinPlanned"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">공실 (<span id="vacantCount">0</span>)</div>
+    <div id="vacant"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">노쇼</div>
+
+    <select id="noshowSelect" onchange="toggleNoshow()">
+      <option value="" selected>--</option>
+      <option value="없음">없음</option>
+      <option value="전날노쇼">전날노쇼</option>
+      <option value="전전날노쇼">전전날노쇼</option>
+    </select>
+
+    <div id="noshowBox" style="display:none;">
+      <div id="noshow"></div>
+    </div>
+  </div>
+
+  <label class="main-label">이불오염</label>
+  <select id="stainCount">
+    <option value="" selected>--</option>
+    <option value="없음">없음</option>
+    <option value="1">1</option>
+    <option value="2">2</option>
+    <option value="3">3</option>
+    <option value="4">4</option>
+    <option value="5">5</option>
+    <option value="6">6</option>
+    <option value="7">7</option>
+    <option value="8">8</option>
+  </select>
+
+  <label class="main-label">특이사항, 청소 외 업무</label>
+  <textarea id="memo"></textarea>
+
+  <div class="message-line" id="customMessage"></div>
+
+  <button onclick="submitForm()">퇴근완료</button>
+
+</div>
+
+<div id="donePage">
+  <div class="done-message">퇴근 완료.</div>
+</div>
+
+<script>
+const webhookUrl = "https://hook.us2.make.com/2y9kz1fqhfr2hl84og54aft1lcligjl5";
+
+const rooms = {
+  "미니싱글": ["401","408","501","508"],
+  "싱글": ["402","407","502","504","507"],
+  "더블": ["403","404","405","503","505"],
+  "패밀리": ["406","506"]
+};
+
+function createSection(id) {
+  const container = document.getElementById(id);
+
+  for (let type in rooms) {
+    const line = document.createElement("div");
+    line.className = "room-line";
+
+    const t = document.createElement("div");
+    t.className = "room-type";
+    t.innerText = type;
+
+    const opt = document.createElement("div");
+    opt.className = "room-options";
+
+    rooms[type].forEach(r => {
+      const label = document.createElement("label");
+
+      const cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.value = r;
+      cb.name = id;
+      cb.onchange = updateCount;
+
+      label.appendChild(cb);
+      label.append(" " + r);
+      opt.appendChild(label);
+    });
+
+    line.appendChild(t);
+    line.appendChild(opt);
+    container.appendChild(line);
+  }
+}
+
+createSection("checkinDone");
+createSection("checkinPlanned");
+createSection("vacant");
+createSection("noshow");
+
+function getChecked(name) {
+  return [...document.querySelectorAll(`input[name="${name}"]:checked`)].map(e => e.value);
+}
+
+function updateCount() {
+  document.getElementById("checkinDoneCount").innerText = getChecked("checkinDone").length;
+  document.getElementById("checkinPlannedCount").innerText = getChecked("checkinPlanned").length;
+  document.getElementById("vacantCount").innerText = getChecked("vacant").length;
+}
+
+function toggleNoshow() {
+  const val = document.getElementById("noshowSelect").value;
+  const box = document.getElementById("noshowBox");
+
+  if (val === "전날노쇼" || val === "전전날노쇼") {
+    box.style.display = "block";
+
+    if (val === "전날노쇼") {
+      alert("오늘 반드시 메세지 보내서 언제오는지 확인해주세요 (오후근무자대상)");
+    }
+
+    if (val === "전전날노쇼") {
+      alert("2일이나 지났고 메세지 답변 없으면 객실 2일넘게 절대 비워두지 마세요. 노쇼로 표시하거나 사장에게 바로 보고바람 비상임.");
+    }
+
+  } else {
+    box.style.display = "none";
+    document.querySelectorAll('input[name="noshow"]').forEach(cb => cb.checked = false);
+  }
+}
+
+async function submitForm() {
+  const worker = document.getElementById("worker").value;
+  const checkinDone = getChecked("checkinDone");
+  const checkinPlanned = getChecked("checkinPlanned");
+  const vacant = getChecked("vacant");
+  const noshowMode = document.getElementById("noshowSelect").value;
+  const noshowRooms = getChecked("noshow");
+  const stainCount = document.getElementById("stainCount").value;
+  const memo = document.getElementById("memo").value.trim();
+
+  if (!worker) {
+    alert("근로자를 선택하세요.");
+    return;
+  }
+
+  if (noshowMode === "") {
+    alert("노쇼를 선택해주세요");
+    return;
+  }
+
+  if ((noshowMode === "전날노쇼" || noshowMode === "전전날노쇼") && noshowRooms.length === 0) {
+    alert("노쇼 객실을 선택해주세요");
+    return;
+  }
+
+  if (stainCount === "") {
+    alert("오염된 침구류가 있는지 선택해주세요");
+    return;
+  }
+
+  const checkinDoneText = checkinDone.join(", ") || "없음";
+  const checkinPlannedText = checkinPlanned.join(", ") || "없음";
+  const vacantText = vacant.join(", ") || "없음";
+  const noshowRoomsText = noshowRooms.join(", ") || "없음";
+  const noshowText = noshowMode === "없음" ? "없음" : noshowRoomsText;
+
+  const text =
+`[퇴근보고]
+근로자: ${worker}
+
+체크인완료: ${checkinDone.length}개
+${checkinDoneText}
+
+체크인예정: ${checkinPlanned.length}개
+${checkinPlannedText}
+
+공실: ${vacant.length}개
+${vacantText}
+
+노쇼구분: ${noshowMode}
+노쇼객실: ${noshowText}
+
+이불오염: ${stainCount}
+
+특이사항, 청소 외 업무: ${memo || "없음"}`;
+
+  const payload = {
+    report_type: "퇴근보고",
+    submitted_at: new Date().toISOString(),
+
+    worker: worker,
+
+    checkin_done_count: checkinDone.length,
+    checkin_done_rooms: checkinDoneText,
+    checkin_done_rooms_array: checkinDone,
+
+    checkin_planned_count: checkinPlanned.length,
+    checkin_planned_rooms: checkinPlannedText,
+    checkin_planned_rooms_array: checkinPlanned,
+
+    vacant_count: vacant.length,
+    vacant_rooms: vacantText,
+    vacant_rooms_array: vacant,
+
+    noshow_mode: noshowMode,
+    noshow_rooms: noshowRoomsText,
+    noshow_rooms_array: noshowRooms,
+    noshow_text: noshowText,
+
+    stain_count: stainCount,
+
+    memo: memo || "없음",
+
+    text: text
+  };
+
+  try {
+    const response = await fetch(webhookUrl, {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+      throw new Error("Webhook 전송 실패");
+    }
+
+    document.getElementById("formPage").style.display = "none";
+    document.getElementById("donePage").style.display = "block";
+    window.scrollTo(0, 0);
+
+  } catch (error) {
+    alert("전송 실패");
+    console.error(error);
+  }
+}
+</script>
+
+</body>
+</html>
