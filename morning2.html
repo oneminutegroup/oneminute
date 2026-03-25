@@ -187,7 +187,7 @@ button {
 
   <div class="message-line" id="customMessage"></div>
 
-  <button onclick="submitForm()">퇴근완료</button>
+  <button onclick="submitForm()">퇴근보고 제출완료. 오늘도 고생하셨습니다</button>
 
 </div>
 
@@ -302,6 +302,12 @@ async function submitForm() {
 
   if (stainCount === "") {
     alert("오염된 침구류가 있는지 선택해주세요");
+    return;
+  }
+
+  const duplicatedRooms = checkinDone.filter(room => checkinPlanned.includes(room));
+  if (duplicatedRooms.length > 0) {
+    alert("체크인 예정과 완료 객실이 중복입니다. 확인해주세요.");
     return;
   }
 
