@@ -57,6 +57,23 @@ select, textarea {
   margin-bottom: 12px;
 }
 
+.section-title-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.section-title-row .section-title {
+  margin-bottom: 0;
+}
+
+.section-help {
+  font-size: 13px;
+  color: #666;
+}
+
 .room-line {
   display: flex;
   align-items: center;
@@ -182,7 +199,10 @@ button {
   </div>
 
   <div class="section">
-    <div class="section-title">미체크인 리마인더 (<span id="reminderCount">0</span>)</div>
+    <div class="section-title-row">
+      <div class="section-title">미체크인 리마인더 (<span id="reminderCount">0</span>)</div>
+      <div class="section-help">- 아직 안온 게스트 객실번호 안내+카드키사진 -</div>
+    </div>
     <div id="reminder"></div>
   </div>
 
@@ -201,21 +221,20 @@ button {
     </div>
   </div>
 
-  <div class="compact-row-wrap">
-    <div class="compact-row">
-      <span class="compact-title">이불오염 제거</span>
-      <select id="stainRemoval" class="compact-select">
-        <option value="" selected>--</option>
-        <option value="없음">없음</option>
-        <option value="1">1</option>
-        <option value="2">2</option>
-        <option value="3">3</option>
-        <option value="4">4</option>
-        <option value="5">5</option>
-        <option value="6">6</option>
-        <option value="7">7</option>
-      </select>
-    </div>
+  <div class="section">
+    <div class="section-title">이불오염 제거</div>
+    <div class="section-help" style="margin-bottom:8px;">오전/오후 근무자가 검출한 이불 오염제거</div>
+    <select id="stainRemoval">
+      <option value="" selected>--</option>
+      <option value="없음">없음</option>
+      <option value="1">1</option>
+      <option value="2">2</option>
+      <option value="3">3</option>
+      <option value="4">4</option>
+      <option value="5">5</option>
+      <option value="6">6</option>
+      <option value="7">7</option>
+    </select>
   </div>
 
   <div class="compact-row-wrap">
@@ -272,6 +291,11 @@ button {
       <span class="compact-label">N</span>
       <select id="naverMailN" class="compact-select"></select>
     </div>
+  </div>
+
+  <div class="section" id="naverMailDetailSection" style="display:none;">
+    <label class="main-label">네이버 메일미처리 내용 상세</label>
+    <textarea id="naverMailDetail"></textarea>
   </div>
 
   <div class="compact-row-wrap">
@@ -383,8 +407,29 @@ fillSelect("naverMailS", 0, 10, true);
 fillSelect("naverMailH", 0, 10, true);
 fillSelect("naverMailN", 0, 10, true);
 
+document.getElementById("naverMailJ").addEventListener("change", toggleNaverMailDetail);
+document.getElementById("naverMailS").addEventListener("change", toggleNaverMailDetail);
+document.getElementById("naverMailH").addEventListener("change", toggleNaverMailDetail);
+document.getElementById("naverMailN").addEventListener("change", toggleNaverMailDetail);
+
 function getChecked(name) {
   return [...document.querySelectorAll(`input[name="${name}"]:checked`)].map(e => e.value);
+}
+
+function arraysEqualAsSet(arr1, arr2) {
+  if (arr1.length !== arr2.length) return false;
+  const set1 = new Set(arr1);
+  const set2 = new Set(arr2);
+  if (set1.size !== set2.size) return false;
+  for (const item of set1) {
+    if (!set2.has(item)) return false;
+  }
+  return true;
+}
+
+function hasOverlap(arr1, arr2) {
+  const set2 = new Set(arr2);
+  return arr1.some(item => set2.has(item));
 }
 
 function updateCount() {
@@ -410,6 +455,26 @@ function toggleNoshow() {
   } else {
     box.style.display = "none";
     document.querySelectorAll('input[name="noshow"]').forEach(cb => cb.checked = false);
+  }
+}
+
+function toggleNaverMailDetail() {
+  const j = document.getElementById("naverMailJ").value;
+  const s = document.getElementById("naverMailS").value;
+  const h = document.getElementById("naverMailH").value;
+  const n = document.getElementById("naverMailN").value;
+
+  const values = [j, s, h, n];
+  const hasPending = values.some(v => v !== "" && Number(v) > 0);
+
+  const section = document.getElementById("naverMailDetailSection");
+  const textarea = document.getElementById("naverMailDetail");
+
+  if (hasPending) {
+    section.style.display = "block";
+  } else {
+    section.style.display = "none";
+    textarea.value = "";
   }
 }
 
@@ -442,6 +507,7 @@ async function submitForm() {
   const naverMailS = document.getElementById("naverMailS").value;
   const naverMailH = document.getElementById("naverMailH").value;
   const naverMailN = document.getElementById("naverMailN").value;
+  const naverMailDetail = document.getElementById("naverMailDetail").value.trim();
 
   const naverSimpleCheck = document.getElementById("naverSimpleCheck").value;
   const memo = document.getElementById("memo").value.trim();
@@ -471,8 +537,22 @@ async function submitForm() {
     return;
   }
 
+  const hasPendingMail = [naverMailJ, naverMailS, naverMailH, naverMailN].some(v => Number(v) > 0);
+  if (hasPendingMail && naverMailDetail === "") {
+    alert("네이버메일미처리된 내용 작성해주세요.");
+    return;
+  }
+
   if (naverSimpleCheck === "") {
     alert("네이버 간단예약관리 상태를 확인해주세요.");
+    return;
+  }
+
+  const samePlannedAndReminder = arraysEqualAsSet(checkinPlanned, reminder);
+  const doneOverlap = hasOverlap(checkinDone, checkinPlanned) || hasOverlap(checkinDone, reminder);
+
+  if (!samePlannedAndReminder || doneOverlap) {
+    alert("체크인 예정과 미체크인 리마인더 객실은 같아야합니다.");
     return;
   }
 
@@ -504,6 +584,7 @@ ${reminderText}
 내일청소: J ${tomorrowCleanJ} / S ${tomorrowCleanS} / H ${tomorrowCleanH} / N ${tomorrowCleanN}
 대시보드: J ${dashboardJ} / S ${dashboardS} / H ${dashboardH} / N ${dashboardN}
 네이버 메일미처리: J ${naverMailJ} / S ${naverMailS} / H ${naverMailH} / N ${naverMailN}
+네이버 메일미처리 내용 상세: ${hasPendingMail ? naverMailDetail : "없음"}
 네이버 간단예약관리 (J/N점) 체크여부: ${naverSimpleCheck}
 
 특이사항: ${memo || "없음"}`;
@@ -553,6 +634,7 @@ ${reminderText}
     naver_mail_s: naverMailS,
     naver_mail_h: naverMailH,
     naver_mail_n: naverMailN,
+    naver_mail_detail: hasPendingMail ? naverMailDetail : "없음",
 
     naver_simple_check: naverSimpleCheck,
 
