@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>퇴근보고</title>
+
+<style>
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background: #f5f6fa;
+  padding: 0;
+}
+
+.container {
+  width: 100%;
+  background: white;
+  padding: 14px;
+}
+
+h2 {
+  margin: 0 0 20px 0;
+  font-size: 22px;
+}
+
+label.main-label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+select, textarea {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 20px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 16px;
+}
+
+.section {
+  margin-bottom: 26px;
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 12px;
+}
+
+.room-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.room-type {
+  width: 70px;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.room-options {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px 10px;
+}
+
+.room-options label {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  white-space: nowrap;
+  font-size: 14px;
+}
+
+.room-options input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+}
+
+.compact-row-wrap {
+  overflow-x: auto;
+  margin-bottom: 20px;
+}
+
+.compact-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  min-width: max-content;
+}
+
+.compact-title {
+  font-weight: bold;
+  font-size: 16px;
+  margin-right: 2px;
+}
+
+.compact-label {
+  font-weight: bold;
+  font-size: 15px;
+}
+
+.compact-select {
+  width: 58px;
+  min-width: 58px;
+  padding: 8px 6px;
+  margin: 0;
+  font-size: 14px;
+}
+
+.message-line {
+  text-align: center;
+  font-size: 14px;
+  margin: 10px 0;
+}
+
+button {
+  width: 100%;
+  padding: 15px;
+  background: black;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+}
+
+#donePage {
+  display: none;
+  min-height: 100vh;
+  background: white;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.done-message {
+  font-size: 22px;
+  font-weight: bold;
+  line-height: 1.7;
+  white-space: pre-line;
+  margin-top: 60px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container" id="formPage">
+
+  <h2>퇴근보고</h2>
+
+  <label class="main-label">근로자</label>
+  <select id="worker">
+    <option value="">선택하세요</option>
+    <option>직원1</option>
+    <option>직원2</option>
+    <option>직원3</option>
+  </select>
+
+  <div class="section">
+    <div class="section-title">체크인 예정 (<span id="checkinPlannedCount">0</span>)</div>
+    <div id="checkinPlanned"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">체크인 완료 (<span id="checkinDoneCount">0</span>)</div>
+    <div id="checkinDone"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">미체크인 리마인더 (<span id="reminderCount">0</span>)</div>
+    <div id="reminder"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">노쇼</div>
+
+    <select id="noshowSelect" onchange="toggleNoshow()">
+      <option value="" selected>--</option>
+      <option value="없음">없음</option>
+      <option value="전날노쇼">전날노쇼</option>
+      <option value="전전날노쇼">전전날노쇼</option>
+    </select>
+
+    <div id="noshowBox" style="display:none;">
+      <div id="noshow"></div>
+    </div>
+  </div>
+
+  <div class="compact-row-wrap">
+    <div class="compact-row">
+      <span class="compact-title">이불오염 제거</span>
+      <select id="stainRemoval" class="compact-select">
+        <option value="" selected>--</option>
+        <option value="없음">없음</option>
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="5">5</option>
+        <option value="6">6</option>
+        <option value="7">7</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="compact-row-wrap">
+    <div class="compact-row">
+      <span class="compact-title">공실현황</span>
+      <span class="compact-label">J</span>
+      <select id="vacancyJ" class="compact-select"></select>
+      <span class="compact-label">S</span>
+      <select id="vacancyS" class="compact-select"></select>
+      <span class="compact-label">H</span>
+      <select id="vacancyH" class="compact-select"></select>
+      <span class="compact-label">N</span>
+      <select id="vacancyN" class="compact-select"></select>
+    </div>
+  </div>
+
+  <div class="compact-row-wrap">
+    <div class="compact-row">
+      <span class="compact-title">내일청소</span>
+      <span class="compact-label">J</span>
+      <select id="tomorrowCleanJ" class="compact-select"></select>
+      <span class="compact-label">S</span>
+      <select id="tomorrowCleanS" class="compact-select"></select>
+      <span class="compact-label">H</span>
+      <select id="tomorrowCleanH" class="compact-select"></select>
+      <span class="compact-label">N</span>
+      <select id="tomorrowCleanN" class="compact-select"></select>
+    </div>
+  </div>
+
+  <div class="compact-row-wrap">
+    <div class="compact-row">
+      <span class="compact-title">대시보드</span>
+      <span class="compact-label">J</span>
+      <select id="dashboardJ" class="compact-select"></select>
+      <span class="compact-label">S</span>
+      <select id="dashboardS" class="compact-select"></select>
+      <span class="compact-label">H</span>
+      <select id="dashboardH" class="compact-select"></select>
+      <span class="compact-label">N</span>
+      <select id="dashboardN" class="compact-select"></select>
+    </div>
+  </div>
+
+  <div class="compact-row-wrap">
+    <div class="compact-row">
+      <span class="compact-title">네이버 메일미처리</span>
+      <span class="compact-label">J</span>
+      <select id="naverMailJ" class="compact-select"></select>
+      <span class="compact-label">S</span>
+      <select id="naverMailS" class="compact-select"></select>
+      <span class="compact-label">H</span>
+      <select id="naverMailH" class="compact-select"></select>
+      <span class="compact-label">N</span>
+      <select id="naverMailN" class="compact-select"></select>
+    </div>
+  </div>
+
+  <div class="compact-row-wrap">
+    <div class="compact-row">
+      <span class="compact-title">네이버 간단예약관리 (J/N점) 체크여부</span>
+      <select id="naverSimpleCheck" class="compact-select" style="width:90px; min-width:90px;">
+        <option value="" selected>--</option>
+        <option value="완료">완료</option>
+        <option value="미완료">미완료</option>
+      </select>
+    </div>
+  </div>
+
+  <label class="main-label">특이사항</label>
+  <textarea id="memo"></textarea>
+
+  <div class="message-line" id="customMessage"></div>
+
+  <button onclick="submitForm()">퇴근보고 제출</button>
+
+</div>
+
+<div id="donePage">
+  <div class="done-message">퇴근보고 제출완료.</div>
+</div>
+
+<script>
+const webhookUrl = "https://hook.us2.make.com/2y9kz1fqhfr2hl84og54aft1lcligjl5";
+
+const rooms = {
+  "미니싱글": ["401","408","501","508"],
+  "싱글": ["402","407","502","504","507"],
+  "더블": ["403","404","405","503","505"],
+  "패밀리": ["406","506"]
+};
+
+function createSection(id) {
+  const container = document.getElementById(id);
+
+  for (let type in rooms) {
+    const line = document.createElement("div");
+    line.className = "room-line";
+
+    const t = document.createElement("div");
+    t.className = "room-type";
+    t.innerText = type;
+
+    const opt = document.createElement("div");
+    opt.className = "room-options";
+
+    rooms[type].forEach(r => {
+      const label = document.createElement("label");
+
+      const cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.value = r;
+      cb.name = id;
+      cb.onchange = updateCount;
+
+      label.appendChild(cb);
+      label.append(" " + r);
+      opt.appendChild(label);
+    });
+
+    line.appendChild(t);
+    line.appendChild(opt);
+    container.appendChild(line);
+  }
+}
+
+function fillSelect(id, start, end, includeBlank = false) {
+  const select = document.getElementById(id);
+  let html = '';
+  if (includeBlank) {
+    html += '<option value="" selected>--</option>';
+  }
+  for (let i = start; i <= end; i++) {
+    if (!includeBlank && i === start) {
+      html += `<option value="${i}" selected>${i}</option>`;
+    } else {
+      html += `<option value="${i}">${i}</option>`;
+    }
+  }
+  select.innerHTML = html;
+}
+
+createSection("checkinPlanned");
+createSection("checkinDone");
+createSection("reminder");
+createSection("noshow");
+
+fillSelect("vacancyJ", 0, 16);
+fillSelect("vacancyS", 0, 13);
+fillSelect("vacancyH", 0, 7);
+fillSelect("vacancyN", 0, 12);
+
+fillSelect("tomorrowCleanJ", 0, 16);
+fillSelect("tomorrowCleanS", 0, 13);
+fillSelect("tomorrowCleanH", 0, 7);
+fillSelect("tomorrowCleanN", 0, 12);
+
+fillSelect("dashboardJ", 0, 5);
+fillSelect("dashboardS", 0, 5);
+fillSelect("dashboardH", 0, 5);
+fillSelect("dashboardN", 0, 5);
+
+fillSelect("naverMailJ", 0, 10, true);
+fillSelect("naverMailS", 0, 10, true);
+fillSelect("naverMailH", 0, 10, true);
+fillSelect("naverMailN", 0, 10, true);
+
+function getChecked(name) {
+  return [...document.querySelectorAll(`input[name="${name}"]:checked`)].map(e => e.value);
+}
+
+function updateCount() {
+  document.getElementById("checkinPlannedCount").innerText = getChecked("checkinPlanned").length;
+  document.getElementById("checkinDoneCount").innerText = getChecked("checkinDone").length;
+  document.getElementById("reminderCount").innerText = getChecked("reminder").length;
+}
+
+function toggleNoshow() {
+  const val = document.getElementById("noshowSelect").value;
+  const box = document.getElementById("noshowBox");
+
+  if (val === "전날노쇼" || val === "전전날노쇼") {
+    box.style.display = "block";
+
+    if (val === "전날노쇼") {
+      alert("오늘 반드시 메세지 보내서 언제오는지 확인해주세요 (오후근무자대상)");
+    }
+
+    if (val === "전전날노쇼") {
+      alert("2일이나 지났고 메세지 답변 없으면 객실 2일넘게 절대 비워두지 마세요. 노쇼로 표시하거나 사장에게 바로 보고바람 비상임.");
+    }
+  } else {
+    box.style.display = "none";
+    document.querySelectorAll('input[name="noshow"]').forEach(cb => cb.checked = false);
+  }
+}
+
+async function submitForm() {
+  const worker = document.getElementById("worker").value;
+  const checkinPlanned = getChecked("checkinPlanned");
+  const checkinDone = getChecked("checkinDone");
+  const reminder = getChecked("reminder");
+  const noshowMode = document.getElementById("noshowSelect").value;
+  const noshowRooms = getChecked("noshow");
+
+  const stainRemoval = document.getElementById("stainRemoval").value;
+
+  const vacancyJ = document.getElementById("vacancyJ").value;
+  const vacancyS = document.getElementById("vacancyS").value;
+  const vacancyH = document.getElementById("vacancyH").value;
+  const vacancyN = document.getElementById("vacancyN").value;
+
+  const tomorrowCleanJ = document.getElementById("tomorrowCleanJ").value;
+  const tomorrowCleanS = document.getElementById("tomorrowCleanS").value;
+  const tomorrowCleanH = document.getElementById("tomorrowCleanH").value;
+  const tomorrowCleanN = document.getElementById("tomorrowCleanN").value;
+
+  const dashboardJ = document.getElementById("dashboardJ").value;
+  const dashboardS = document.getElementById("dashboardS").value;
+  const dashboardH = document.getElementById("dashboardH").value;
+  const dashboardN = document.getElementById("dashboardN").value;
+
+  const naverMailJ = document.getElementById("naverMailJ").value;
+  const naverMailS = document.getElementById("naverMailS").value;
+  const naverMailH = document.getElementById("naverMailH").value;
+  const naverMailN = document.getElementById("naverMailN").value;
+
+  const naverSimpleCheck = document.getElementById("naverSimpleCheck").value;
+  const memo = document.getElementById("memo").value.trim();
+
+  if (!worker) {
+    alert("근로자를 선택하세요.");
+    return;
+  }
+
+  if (noshowMode === "") {
+    alert("노쇼를 선택해주세요");
+    return;
+  }
+
+  if ((noshowMode === "전날노쇼" || noshowMode === "전전날노쇼") && noshowRooms.length === 0) {
+    alert("노쇼 객실을 선택해주세요");
+    return;
+  }
+
+  if (stainRemoval === "") {
+    alert("이불오염 제거 했는지 선택해주세요.");
+    return;
+  }
+
+  if (naverMailJ === "" || naverMailS === "" || naverMailH === "" || naverMailN === "") {
+    alert("네이버 메일미처리 건 있는지 확인해주세요.");
+    return;
+  }
+
+  if (naverSimpleCheck === "") {
+    alert("네이버 간단예약관리 상태를 확인해주세요.");
+    return;
+  }
+
+  const checkinPlannedText = checkinPlanned.join(", ") || "없음";
+  const checkinDoneText = checkinDone.join(", ") || "없음";
+  const reminderText = reminder.join(", ") || "없음";
+  const noshowRoomsText = noshowRooms.join(", ") || "없음";
+  const noshowText = noshowMode === "없음" ? "없음" : noshowRoomsText;
+
+  const text =
+`[퇴근보고]
+근로자: ${worker}
+
+체크인예정: ${checkinPlanned.length}개
+${checkinPlannedText}
+
+체크인완료: ${checkinDone.length}개
+${checkinDoneText}
+
+미체크인 리마인더: ${reminder.length}개
+${reminderText}
+
+노쇼구분: ${noshowMode}
+노쇼객실: ${noshowText}
+
+이불오염 제거: ${stainRemoval}
+
+공실현황: J ${vacancyJ} / S ${vacancyS} / H ${vacancyH} / N ${vacancyN}
+내일청소: J ${tomorrowCleanJ} / S ${tomorrowCleanS} / H ${tomorrowCleanH} / N ${tomorrowCleanN}
+대시보드: J ${dashboardJ} / S ${dashboardS} / H ${dashboardH} / N ${dashboardN}
+네이버 메일미처리: J ${naverMailJ} / S ${naverMailS} / H ${naverMailH} / N ${naverMailN}
+네이버 간단예약관리 (J/N점) 체크여부: ${naverSimpleCheck}
+
+특이사항: ${memo || "없음"}`;
+
+  const payload = {
+    report_type: "퇴근보고",
+    shift: "오후",
+    submitted_at: new Date().toISOString(),
+
+    worker: worker,
+
+    checkin_planned_count: checkinPlanned.length,
+    checkin_planned_rooms: checkinPlannedText,
+    checkin_planned_rooms_array: checkinPlanned,
+
+    checkin_done_count: checkinDone.length,
+    checkin_done_rooms: checkinDoneText,
+    checkin_done_rooms_array: checkinDone,
+
+    reminder_count: reminder.length,
+    reminder_rooms: reminderText,
+    reminder_rooms_array: reminder,
+
+    noshow_mode: noshowMode,
+    noshow_rooms: noshowRoomsText,
+    noshow_rooms_array: noshowRooms,
+    noshow_text: noshowText,
+
+    stain_removal: stainRemoval,
+
+    vacancy_j: vacancyJ,
+    vacancy_s: vacancyS,
+    vacancy_h: vacancyH,
+    vacancy_n: vacancyN,
+
+    tomorrow_clean_j: tomorrowCleanJ,
+    tomorrow_clean_s: tomorrowCleanS,
+    tomorrow_clean_h: tomorrowCleanH,
+    tomorrow_clean_n: tomorrowCleanN,
+
+    dashboard_j: dashboardJ,
+    dashboard_s: dashboardS,
+    dashboard_h: dashboardH,
+    dashboard_n: dashboardN,
+
+    naver_mail_j: naverMailJ,
+    naver_mail_s: naverMailS,
+    naver_mail_h: naverMailH,
+    naver_mail_n: naverMailN,
+
+    naver_simple_check: naverSimpleCheck,
+
+    memo: memo || "없음",
+
+    text: text
+  };
+
+  try {
+    const response = await fetch(webhookUrl, {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+      throw new Error("Webhook 전송 실패");
+    }
+
+    document.getElementById("formPage").style.display = "none";
+    document.getElementById("donePage").style.display = "block";
+    window.scrollTo(0, 0);
+
+  } catch (error) {
+    alert("전송 실패");
+    console.error(error);
+  }
+}
+</script>
+
+</body>
+</html>
