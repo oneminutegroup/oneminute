@@ -23,6 +23,8 @@ body {
 
 .container {
   width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
   background: white;
   padding: 14px;
 }
@@ -108,6 +110,28 @@ select, textarea {
   margin: 0;
 }
 
+.inline-select-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+  flex-wrap: nowrap;
+}
+
+.inline-select-row .section-title {
+  margin: 0;
+  flex: 0 0 auto;
+}
+
+.inline-select {
+  width: 112px;
+  min-width: 112px;
+  padding: 8px 8px;
+  margin: 0;
+  font-size: 14px;
+  flex: 0 0 auto;
+}
+
 .compact-row-wrap {
   width: 100%;
   overflow-x: hidden;
@@ -124,10 +148,9 @@ select, textarea {
 
 .compact-title {
   font-weight: bold;
-  font-size: 15px;
-  margin-right: 2px;
-  flex: 1 1 auto;
-  min-width: 0;
+  font-size: 16px;
+  margin-right: 0;
+  flex: 0 0 auto;
 }
 
 .compact-label {
@@ -137,11 +160,12 @@ select, textarea {
 }
 
 .compact-select {
-  width: 44px;
-  min-width: 44px;
+  width: 42px;
+  min-width: 42px;
   padding: 8px 2px;
   margin: 0;
   font-size: 13px;
+  flex: 0 0 auto;
 }
 
 .message-line {
@@ -186,7 +210,7 @@ button {
   }
 
   .compact-title {
-    font-size: 14px;
+    font-size: 15px;
   }
 
   .compact-label {
@@ -198,6 +222,17 @@ button {
     min-width: 40px;
     padding: 7px 1px;
     font-size: 12px;
+  }
+
+  .inline-select-row {
+    gap: 8px;
+  }
+
+  .inline-select {
+    width: 96px;
+    min-width: 96px;
+    padding: 8px 6px;
+    font-size: 13px;
   }
 }
 </style>
@@ -236,14 +271,15 @@ button {
   </div>
 
   <div class="section">
-    <div class="section-title">노쇼</div>
-
-    <select id="noshowSelect" onchange="toggleNoshow()">
-      <option value="" selected>--</option>
-      <option value="없음">없음</option>
-      <option value="전날노쇼">전날노쇼</option>
-      <option value="전전날노쇼">전전날노쇼</option>
-    </select>
+    <div class="inline-select-row">
+      <div class="section-title">노쇼</div>
+      <select id="noshowSelect" class="inline-select" onchange="toggleNoshow()">
+        <option value="" selected>--</option>
+        <option value="없음">없음</option>
+        <option value="전날노쇼">전날노쇼</option>
+        <option value="전전날노쇼">전전날노쇼</option>
+      </select>
+    </div>
 
     <div id="noshowBox" style="display:none;">
       <div id="noshow"></div>
@@ -251,19 +287,21 @@ button {
   </div>
 
   <div class="section">
-    <div class="section-title">이불오염 제거</div>
-    <div class="section-help" style="margin-bottom:8px;">오전/오후 근무자가 검출한 이불 오염제거</div>
-    <select id="stainRemoval">
-      <option value="" selected>--</option>
-      <option value="없음">없음</option>
-      <option value="1">1</option>
-      <option value="2">2</option>
-      <option value="3">3</option>
-      <option value="4">4</option>
-      <option value="5">5</option>
-      <option value="6">6</option>
-      <option value="7">7</option>
-    </select>
+    <div class="inline-select-row">
+      <div class="section-title">이불오염 제거</div>
+      <select id="stainRemoval" class="inline-select">
+        <option value="" selected>--</option>
+        <option value="없음">없음</option>
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="5">5</option>
+        <option value="6">6</option>
+        <option value="7">7</option>
+      </select>
+    </div>
+    <div class="section-help" style="margin-top:4px;">오전/오후 근무자가 검출한 이불 오염제거</div>
   </div>
 
   <div class="compact-row-wrap">
