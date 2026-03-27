@@ -109,35 +109,39 @@ select, textarea {
 }
 
 .compact-row-wrap {
-  overflow-x: auto;
+  width: 100%;
+  overflow-x: hidden;
   margin-bottom: 20px;
 }
 
 .compact-row {
   display: flex;
   align-items: center;
-  gap: 6px;
+  width: 100%;
+  gap: 4px;
   white-space: nowrap;
-  min-width: max-content;
 }
 
 .compact-title {
   font-weight: bold;
-  font-size: 16px;
+  font-size: 15px;
   margin-right: 2px;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .compact-label {
   font-weight: bold;
-  font-size: 15px;
+  font-size: 14px;
+  flex: 0 0 auto;
 }
 
 .compact-select {
-  width: 58px;
-  min-width: 58px;
-  padding: 8px 6px;
+  width: 44px;
+  min-width: 44px;
+  padding: 8px 2px;
   margin: 0;
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .message-line {
@@ -170,6 +174,31 @@ button {
   line-height: 1.7;
   white-space: pre-line;
   margin-top: 60px;
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 10px;
+  }
+
+  .compact-row {
+    gap: 3px;
+  }
+
+  .compact-title {
+    font-size: 14px;
+  }
+
+  .compact-label {
+    font-size: 13px;
+  }
+
+  .compact-select {
+    width: 40px;
+    min-width: 40px;
+    padding: 7px 1px;
+    font-size: 12px;
+  }
 }
 </style>
 </head>
@@ -281,7 +310,7 @@ button {
 
   <div class="compact-row-wrap">
     <div class="compact-row">
-      <span class="compact-title">네이버 메일미처리</span>
+      <span class="compact-title">메일잔여</span>
       <span class="compact-label">J</span>
       <select id="naverMailJ" class="compact-select"></select>
       <span class="compact-label">S</span>
@@ -294,7 +323,7 @@ button {
   </div>
 
   <div class="section" id="naverMailDetailSection" style="display:none;">
-    <label class="main-label">네이버 메일미처리 내용 상세</label>
+    <label class="main-label">메일잔여 내용 상세</label>
     <textarea id="naverMailDetail"></textarea>
   </div>
 
@@ -534,13 +563,13 @@ async function submitForm() {
   }
 
   if (naverMailJ === "" || naverMailS === "" || naverMailH === "" || naverMailN === "") {
-    alert("네이버 메일미처리 건 있는지 확인해주세요.");
+    alert("메일잔여 건 있는지 확인해주세요.");
     return;
   }
 
   const hasPendingMail = [naverMailJ, naverMailS, naverMailH, naverMailN].some(v => Number(v) > 0);
   if (hasPendingMail && naverMailDetail === "") {
-    alert("네이버메일미처리된 내용 작성해주세요.");
+    alert("메일잔여된 내용 작성해주세요.");
     return;
   }
 
@@ -584,8 +613,8 @@ ${reminderText}
 공실현황: J ${vacancyJ} / S ${vacancyS} / H ${vacancyH} / N ${vacancyN}
 내일청소: J ${tomorrowCleanJ} / S ${tomorrowCleanS} / H ${tomorrowCleanH} / N ${tomorrowCleanN}
 대시보드: J ${dashboardJ} / S ${dashboardS} / H ${dashboardH} / N ${dashboardN}
-네이버 메일미처리: J ${naverMailJ} / S ${naverMailS} / H ${naverMailH} / N ${naverMailN}
-네이버 메일미처리 내용 상세: ${hasPendingMail ? naverMailDetail : "없음"}
+메일잔여: J ${naverMailJ} / S ${naverMailS} / H ${naverMailH} / N ${naverMailN}
+메일잔여 내용 상세: ${hasPendingMail ? naverMailDetail : "없음"}
 네이버 간단예약관리 (J/N점) 체크여부: ${naverSimpleCheck}
 
 특이사항: ${memo || "없음"}`;
