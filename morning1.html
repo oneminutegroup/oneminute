@@ -24,7 +24,7 @@ body {
 .container {
   width: 100%;
   max-width: 720px;
-  margin: 0 auto;
+  margin: 0 auto; 
   background: white;
   padding: 14px;
 }
@@ -46,8 +46,8 @@ select, textarea {
   margin-bottom: 20px;
   border-radius: 8px;
   border: 1px solid #ccc;
-  font-family: inherit;
-  font-size: 15px;
+  font-family: Arial, sans-serif;
+  font-size: 14px;
 }
 
 .section {
@@ -211,20 +211,25 @@ button {
 <script>
 const webhookUrl = "https://hook.us2.make.com/2y9kz1fqhfr2hl84og54aft1lcligjl5";
 
+/*
+  여기만 바꾸면 됨
+  예시)
+  오전출근보고: regularTime: "11:00"
+  오후출근보고: regularTime: "15:00"
+  테스트용: regularTime: "10:20", warningMinutes: 2, reasonMinutes: 4
+*/
+const settings = {
+  regularTime: "11:00",
+  warningMinutes: 20,
+  reasonMinutes: 40
+};
+
 const rooms = {
   "미니싱글": ["401","408","501","508"],
   "싱글": ["402","407","502","504","507"],
   "더블": ["403","404","405","503","505"],
   "패밀리": ["406","506"]
 };
-
-const regularStartHour = 11;
-const regularStartMinute = 0;
-
-const warningMessage =
-`정규출근시간은 11시입니다. 시간을 준수해주세요.
-정규시간보다 30분 이상 변동시 사유를 입력해야 합니다.
-(사장에게 사전보고를 한 경우는 이 메세지를 무시하세요)`;
 
 function createSection(id) {
   const container = document.getElementById(id);
@@ -294,17 +299,28 @@ function toggleNoshow() {
   }
 }
 
+function getRegularMinutes() {
+  const [hour, minute] = settings.regularTime.split(":").map(Number);
+  return hour * 60 + minute;
+}
+
 function getCurrentTimeDiffMinutes() {
   const now = new Date();
   const currentMinutes = now.getHours() * 60 + now.getMinutes();
-  const regularMinutes = regularStartHour * 60 + regularStartMinute;
-  return currentMinutes - regularMinutes;
+  return currentMinutes - getRegularMinutes();
 }
 
 function formatTimeDiffText(diffMinutes) {
   if (diffMinutes === 0) return "정시";
+
   const abs = Math.abs(diffMinutes);
   return diffMinutes > 0 ? `${abs}분 늦음` : `${abs}분 빠름`;
+}
+
+function getWarningMessage() {
+  return `정규출근시간은 ${settings.regularTime}입니다. 시간을 준수해주세요.
+정규시간보다 ${settings.reasonMinutes}분 이상 변동시 사유를 입력해야 합니다.
+(사장에게 사전보고를 한 경우는 이 메세지를 무시하세요)`;
 }
 
 function showTimeReasonField() {
@@ -319,9 +335,8 @@ async function submitForm() {
   const noshowMode = document.getElementById("noshowSelect").value;
   const noshowRooms = getChecked("noshow");
   const memo = document.getElementById("memo").value.trim();
-
-  const timeReasonSection = document.getElementById("timeReasonSection");
   const timeReason = document.getElementById("timeReason").value.trim();
+  const timeReasonSection = document.getElementById("timeReasonSection");
 
   if (!worker) {
     alert("근로자를 선택하세요.");
@@ -341,9 +356,9 @@ async function submitForm() {
   const diffMinutes = getCurrentTimeDiffMinutes();
   const absDiffMinutes = Math.abs(diffMinutes);
 
-  if (absDiffMinutes >= 40) {
+  if (absDiffMinutes >= settings.reasonMinutes) {
     if (timeReasonSection.style.display !== "block") {
-      alert(warningMessage);
+      alert(getWarningMessage());
       showTimeReasonField();
       document.getElementById("timeReason").focus();
       return;
@@ -354,8 +369,8 @@ async function submitForm() {
       document.getElementById("timeReason").focus();
       return;
     }
-  } else if (absDiffMinutes >= 20) {
-    alert(warningMessage);
+  } else if (absDiffMinutes >= settings.warningMinutes) {
+    alert(getWarningMessage());
   }
 
   const cleanRoomsText = clean.join(", ") || "없음";
@@ -371,6 +386,7 @@ async function submitForm() {
 `[출근보고]
 근로자: ${worker}
 제출시각: ${submittedAtText}
+정규출근시간: ${settings.regularTime}
 출근시간변동: ${timeVariationText}
 
 청소객실: ${clean.length}개
@@ -394,7 +410,9 @@ ${inspectRoomsText}
 
     worker: worker,
 
-    regular_start_time: "11:00",
+    regular_time: settings.regularTime,
+    warning_minutes: settings.warningMinutes,
+    reason_minutes: settings.reasonMinutes,
     time_diff_minutes: diffMinutes,
     time_diff_abs_minutes: absDiffMinutes,
     time_variation_text: timeVariationText,
