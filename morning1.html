@@ -386,8 +386,6 @@ async function submitForm() {
 `[출근보고]
 근로자: ${worker}
 제출시각: ${submittedAtText}
-정규출근시간: ${settings.regularTime}
-출근시간변동: ${timeVariationText}
 
 청소객실: ${clean.length}개
 ${cleanRoomsText}
@@ -395,10 +393,7 @@ ${cleanRoomsText}
 점검객실: ${inspect.length}개
 ${inspectRoomsText}
 
-노쇼구분: ${noshowMode}
-노쇼객실: ${noshowText}
-
-출근시간 변동사유: ${timeReason || "없음"}
+노쇼: ${noshowMode} / 객실: ${noshowText}
 
 특이사항: ${memo || "없음"}`;
 
