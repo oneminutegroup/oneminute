@@ -509,8 +509,6 @@ async function submitForm() {
 `[퇴근보고]
 근로자: ${worker}
 제출시각: ${submittedAtText}
-정규퇴근시간: ${settings.regularTime}
-퇴근시간변동: ${timeVariationText}
 
 체크인완료: ${checkinDone.length}개
 ${checkinDoneText}
@@ -521,14 +519,10 @@ ${checkinPlannedText}
 공실: ${vacant.length}개
 ${vacantText}
 
-노쇼구분: ${noshowMode}
-노쇼객실: ${noshowText}
+노쇼: ${noshowMode} / 객실: ${noshowText}
 
 이불오염: ${stainCount}
-분실물: ${lostItemStatus}
-분실물 상세내용: ${lostItemStatus === "있음" ? lostItemDetail : "없음"}
-
-퇴근시간 변동사유: ${timeReason || "없음"}
+분실물: ${lostItemStatus} / ${lostItemStatus === "있음" ? lostItemDetail : "없음"}
 
 특이사항, 청소 외 업무: ${memo || "없음"}`;
 
