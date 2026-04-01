@@ -142,6 +142,53 @@ button {
   white-space: pre-line;
   margin-top: 60px;
 }
+
+/* 청소 적은 날 워닝 팝업 */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 9999;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.modal-box {
+  width: 100%;
+  max-width: 520px;
+  background: white;
+  border-radius: 14px;
+  padding: 22px 18px 16px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.18);
+}
+
+.modal-message {
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.7;
+  color: #111;
+  white-space: pre-line;
+  margin-bottom: 18px;
+}
+
+.modal-button {
+  width: 100%;
+  padding: 14px;
+  background: black;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+@media (max-width: 480px) {
+  .modal-message {
+    font-size: 17px;
+  }
+}
 </style>
 </head>
 
@@ -195,9 +242,7 @@ button {
     <textarea id="timeReason" placeholder="출근시간 변동 사유를 입력하세요."></textarea>
   </div>
 
-  <div class="message-line" id="customMessage">
-    
-  </div>
+  <div class="message-line" id="customMessage"></div>
 
   <button onclick="submitForm()">출근완료</button>
 
@@ -205,7 +250,19 @@ button {
 
 <div id="donePage">
   <div class="done-message">출근 완료. 
-5분 후에 워치 테스트 알람갑니다. 풀타임 착용하시고 개인폰 말고 게하폰 항상 소지하세요.</div>
+5분 후에 워치 연결 테스트 알람갑니다. 
+풀타임 착용하시고 개인폰 말고 게하폰 
+항상 소지하세요.</div>
+</div>
+
+<!-- 청소 적은 날 워닝 모달 -->
+<div id="lowCleanModal" class="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-message" id="lowCleanModalMessage">
+오늘처럼 청소가 적은날은 청소 외 업무, 공용공간 청소 또는 평소에 닦지 않던곳 (커피머신 위, 도어락 전면말고 상단면, 도어벨 상단면, 복도 완강기 박스/소화기 등 먼지가 수북히 쌓인 곳)을 청소해주시고 퇴근보고 시 청소외 업무 코멘트 남겨주세요.
+    </div>
+    <button class="modal-button" onclick="confirmLowCleanWarning()">확인</button>
+  </div>
 </div>
 
 <script>
@@ -223,6 +280,10 @@ const settings = {
   warningMinutes: 20,
   reasonMinutes: 40
 };
+
+const LOW_CLEAN_WARNING_MESSAGE = `오늘처럼 청소가 적은날은 청소 외 업무, 공용공간 청소 또는 평소에 닦지 않던곳 (커피머신 위, 도어락 전면말고 상단면, 도어벨 상단면, 복도 완강기 박스/소화기 등등 먼지가 수북히 쌓인 곳)을 청소해주시고 퇴근보고 시 청소외 업무 코멘트 남겨주세요.`;
+
+let pendingSubmitAfterLowCleanWarning = false;
 
 const rooms = {
   "미니싱글": ["401","408","501","508"],
@@ -328,7 +389,25 @@ function showTimeReasonField() {
   section.style.display = "block";
 }
 
-async function submitForm() {
+function showLowCleanWarningModal() {
+  document.getElementById("lowCleanModalMessage").innerText = LOW_CLEAN_WARNING_MESSAGE;
+  document.getElementById("lowCleanModal").style.display = "flex";
+}
+
+function hideLowCleanWarningModal() {
+  document.getElementById("lowCleanModal").style.display = "none";
+}
+
+function confirmLowCleanWarning() {
+  hideLowCleanWarningModal();
+
+  if (pendingSubmitAfterLowCleanWarning) {
+    pendingSubmitAfterLowCleanWarning = false;
+    submitForm(true);
+  }
+}
+
+async function submitForm(skipLowCleanWarning = false) {
   const worker = document.getElementById("worker").value;
   const clean = getChecked("clean");
   const inspect = getChecked("inspect");
@@ -371,6 +450,12 @@ async function submitForm() {
     }
   } else if (absDiffMinutes >= settings.warningMinutes) {
     alert(getWarningMessage());
+  }
+
+  if (!skipLowCleanWarning && clean.length <= 3) {
+    pendingSubmitAfterLowCleanWarning = true;
+    showLowCleanWarningModal();
+    return;
   }
 
   const cleanRoomsText = clean.join(", ") || "없음";
