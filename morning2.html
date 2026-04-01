@@ -129,15 +129,16 @@ button {
 .inline-select-row {
   display: flex;
   align-items: center;
-  gap: 8px;
-  flex-wrap: nowrap;
+  gap: 10px;
   margin-bottom: 8px;
+  width: 100%;
 }
 
 .inline-item {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+  flex: 1;
   min-width: 0;
 }
 
@@ -146,12 +147,15 @@ button {
   font-size: 16px;
   margin: 0;
   white-space: nowrap;
+  min-width: fit-content;
 }
 
 .inline-small-select {
-  width: 78px;
-  min-width: 78px;
-  padding: 8px 6px;
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  max-width: 120px;
+  padding: 8px 8px;
   margin: 0;
   border-radius: 8px;
   border: 1px solid #ccc;
@@ -166,6 +170,10 @@ button {
 
 @media (max-width: 480px) {
   .inline-select-row {
+    gap: 8px;
+  }
+
+  .inline-item {
     gap: 6px;
   }
 
@@ -174,10 +182,9 @@ button {
   }
 
   .inline-small-select {
-    width: 68px;
-    min-width: 68px;
+    max-width: 92px;
     font-size: 12px;
-    padding: 7px 4px;
+    padding: 7px 6px;
   }
 }
 </style>
@@ -246,7 +253,7 @@ button {
 
     <div class="inline-item">
       <label for="lostItemStatus">분실물</label>
-      <select id="lostItemStatus" class="inline-small-select">
+      <select id="lostItemStatus" class="inline-small-select" onchange="handleLostItemChange()">
         <option value="" selected>--</option>
         <option value="없음">없음</option>
         <option value="있음">있음</option>
@@ -258,7 +265,7 @@ button {
 
   <div id="lostItemDetailSection" style="display:none;">
     <label class="main-label">분실물 상세내용</label>
-    <textarea id="lostItemDetail" placeholder="분실물 몇호 / 무엇인지 작성해주세요."></textarea>
+    <textarea id="lostItemDetail" placeholder="객실번호와 분실물 내용을 입력해주세요."></textarea>
   </div>
 
   <label class="main-label">특이사항, 청소 외 업무</label>
@@ -397,6 +404,23 @@ function showLostItemDetailField() {
   document.getElementById("lostItemDetailSection").style.display = "block";
 }
 
+function hideLostItemDetailField() {
+  document.getElementById("lostItemDetailSection").style.display = "none";
+  document.getElementById("lostItemDetail").value = "";
+}
+
+function handleLostItemChange() {
+  const lostItemStatus = document.getElementById("lostItemStatus").value;
+
+  if (lostItemStatus === "있음") {
+    alert("객실번호와 분실물 내용을 입력해주세요");
+    showLostItemDetailField();
+    document.getElementById("lostItemDetail").focus();
+  } else {
+    hideLostItemDetailField();
+  }
+}
+
 async function submitForm() {
   const worker = document.getElementById("worker").value;
   const checkinDone = getChecked("checkinDone");
@@ -410,7 +434,6 @@ async function submitForm() {
   const memo = document.getElementById("memo").value.trim();
   const timeReason = document.getElementById("timeReason").value.trim();
   const timeReasonSection = document.getElementById("timeReasonSection");
-  const lostItemDetailSection = document.getElementById("lostItemDetailSection");
 
   if (!worker) {
     alert("근로자를 선택하세요.");
@@ -437,19 +460,11 @@ async function submitForm() {
     return;
   }
 
-  if (lostItemStatus === "있음") {
-    if (lostItemDetailSection.style.display !== "block") {
-      alert("분실물 몇호에 무엇인지 내용을 작성에 주세요");
-      showLostItemDetailField();
-      document.getElementById("lostItemDetail").focus();
-      return;
-    }
-
-    if (!lostItemDetail) {
-      alert("분실물 몇호에 무엇인지 내용을 작성에 주세요");
-      document.getElementById("lostItemDetail").focus();
-      return;
-    }
+  if (lostItemStatus === "있음" && !lostItemDetail) {
+    alert("객실번호와 분실물 내용을 입력해주세요");
+    showLostItemDetailField();
+    document.getElementById("lostItemDetail").focus();
+    return;
   }
 
   const diffMinutes = getCurrentTimeDiffMinutes();
