@@ -24,7 +24,7 @@ body {
 .container {
   width: 100%;
   max-width: 720px;
-  margin: 0 auto; 
+  margin: 0 auto;
   background: white;
   padding: 14px;
 }
@@ -168,6 +168,41 @@ button {
   margin-bottom: 18px;
 }
 
+.reason-box {
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 18px;
+  background: #fafafa;
+}
+
+.reason-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.reason-options label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.reason-options input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+}
+
+.small-help {
+  font-size: 12px;
+  color: #666;
+  margin-top: -12px;
+  margin-bottom: 18px;
+}
+
 @media (max-width: 480px) {
   .inline-select-row {
     gap: 8px;
@@ -273,8 +308,44 @@ button {
 
   <div id="timeReasonSection" style="display:none;">
     <label class="main-label">퇴근시간 변동사유</label>
-    <textarea id="timeReason" placeholder="퇴근시간 변동 사유를 입력하세요."></textarea>
+    <div class="reason-box">
+      <div class="reason-options">
+        <label>
+          <input type="checkbox" id="reasonBossMission" name="timeReasonCheck" value="사장님 특별미션">
+          사장님 특별미션
+        </label>
+        <label>
+          <input type="checkbox" id="reasonHeavyCleaning" name="timeReasonCheck" value="청소 갯수 과다">
+          청소 갯수 과다
+        </label>
+        <label>
+          <input type="checkbox" id="reasonEtc" name="timeReasonCheck" value="기타 사유" onchange="handleEtcReasonChange()">
+          기타 사유 (직접입력)
+        </label>
+      </div>
+      <div id="etcReasonInputSection" style="display:none;">
+        <textarea id="etcReasonText" placeholder="기타 사유를 입력하세요."></textarea>
+      </div>
+    </div>
   </div>
+
+  <label class="main-label">추가 근무시간</label>
+  <select id="extraWorkTime">
+    <option value="" selected>--</option>
+    <option value="10분">10분</option>
+    <option value="20분">20분</option>
+    <option value="30분">30분</option>
+    <option value="40분">40분</option>
+    <option value="50분">50분</option>
+    <option value="60분">60분</option>
+    <option value="70분">70분</option>
+    <option value="80분">80분</option>
+    <option value="90분">90분</option>
+    <option value="100분">100분</option>
+    <option value="110분">110분</option>
+    <option value="120분">120분</option>
+  </select>
+  <div class="small-help">퇴근보고 외에 추가로 근무한 시간 추가해주세요.</div>
 
   <div class="message-line" id="customMessage"></div>
 
@@ -392,12 +463,26 @@ function formatTimeDiffText(diffMinutes) {
 
 function getTimeWarningMessage() {
   return `정규퇴근시간은 ${settings.regularTime}입니다. 시간을 준수해주세요.
-정규시간보다 ${settings.reasonMinutes}분 이상 변동시 사유를 입력해야 합니다.
+정규시간보다 ${settings.reasonMinutes}분 이상 변동시 사유를 선택해야 합니다.
 (사장에게 사전보고를 한 경우는 이 메세지를 무시하세요)`;
 }
 
 function showTimeReasonField() {
   document.getElementById("timeReasonSection").style.display = "block";
+}
+
+function handleEtcReasonChange() {
+  const etcChecked = document.getElementById("reasonEtc").checked;
+  const etcSection = document.getElementById("etcReasonInputSection");
+  const etcText = document.getElementById("etcReasonText");
+
+  if (etcChecked) {
+    etcSection.style.display = "block";
+    etcText.focus();
+  } else {
+    etcSection.style.display = "none";
+    etcText.value = "";
+  }
 }
 
 function showLostItemDetailField() {
@@ -432,7 +517,13 @@ async function submitForm() {
   const lostItemStatus = document.getElementById("lostItemStatus").value;
   const lostItemDetail = document.getElementById("lostItemDetail").value.trim();
   const memo = document.getElementById("memo").value.trim();
-  const timeReason = document.getElementById("timeReason").value.trim();
+  const extraWorkTime = document.getElementById("extraWorkTime").value;
+
+  const reasonBossMission = document.getElementById("reasonBossMission").checked;
+  const reasonHeavyCleaning = document.getElementById("reasonHeavyCleaning").checked;
+  const reasonEtc = document.getElementById("reasonEtc").checked;
+  const etcReasonText = document.getElementById("etcReasonText").value.trim();
+
   const timeReasonSection = document.getElementById("timeReasonSection");
 
   if (!worker) {
@@ -474,13 +565,17 @@ async function submitForm() {
     if (timeReasonSection.style.display !== "block") {
       alert(getTimeWarningMessage());
       showTimeReasonField();
-      document.getElementById("timeReason").focus();
       return;
     }
 
-    if (!timeReason) {
-      alert("퇴근시간 변동 사유를 입력해주세요");
-      document.getElementById("timeReason").focus();
+    if (!reasonBossMission && !reasonHeavyCleaning && !reasonEtc) {
+      alert("퇴근시간 변동 사유를 선택해주세요");
+      return;
+    }
+
+    if (reasonEtc && !etcReasonText) {
+      alert("기타 사유를 입력해주세요");
+      document.getElementById("etcReasonText").focus();
       return;
     }
   } else if (absDiffMinutes >= settings.warningMinutes) {
@@ -494,6 +589,13 @@ async function submitForm() {
     alert("체크인완료/예정/공실 중에 중복이 있습니다. 확인해주세요.");
     return;
   }
+
+  const timeReasonList = [];
+  if (reasonBossMission) timeReasonList.push("사장님 특별미션");
+  if (reasonHeavyCleaning) timeReasonList.push("청소 갯수 과다");
+  if (reasonEtc) timeReasonList.push(`기타 사유: ${etcReasonText}`);
+
+  const timeReasonText = timeReasonList.length > 0 ? timeReasonList.join(" / ") : "없음";
 
   const checkinDoneText = checkinDone.join(", ") || "없음";
   const checkinPlannedText = checkinPlanned.join(", ") || "없음";
@@ -521,8 +623,11 @@ ${vacantText}
 
 노쇼: ${noshowMode} / 객실: ${noshowText}
 
-이불오염: ${stainCount}
-분실물: ${lostItemStatus} / ${lostItemStatus === "있음" ? lostItemDetail : "없음"}
+이불오염: ${stainCount} / 분실물: ${lostItemStatus}
+
+추가 근무시간: ${extraWorkTime}
+
+퇴근시간 변동사유: ${timeReasonText}
 
 특이사항, 청소 외 업무: ${memo || "없음"}`;
 
@@ -540,7 +645,13 @@ ${vacantText}
     time_diff_minutes: diffMinutes,
     time_diff_abs_minutes: absDiffMinutes,
     time_variation_text: timeVariationText,
-    time_reason: timeReason || "없음",
+
+    time_reason_checks: timeReasonList,
+    time_reason_text: timeReasonText,
+    time_reason_boss_mission: reasonBossMission ? "예" : "아니오",
+    time_reason_heavy_cleaning: reasonHeavyCleaning ? "예" : "아니오",
+    time_reason_etc_checked: reasonEtc ? "예" : "아니오",
+    time_reason_etc_text: reasonEtc ? etcReasonText : "없음",
 
     checkin_done_count: checkinDone.length,
     checkin_done_rooms: checkinDoneText,
@@ -563,6 +674,8 @@ ${vacantText}
 
     lost_item_status: lostItemStatus,
     lost_item_detail: lostItemStatus === "있음" ? lostItemDetail : "없음",
+
+    extra_work_time: extraWorkTime,
 
     memo: memo || "없음",
 
