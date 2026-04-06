@@ -311,20 +311,24 @@ button {
   <div id="timeReasonSection" style="display:none;">
     <label class="main-label">퇴근시간 변동사유</label>
     <div class="reason-box">
-      <div class="reason-options">
-        <label>
-          <input type="checkbox" id="reasonBossMission" name="timeReasonCheck" value="사장님 특별미션">
-          사장님 특별미션
-        </label>
-        <label>
-          <input type="checkbox" id="reasonHeavyCleaning" name="timeReasonCheck" value="청소 갯수 과다">
-          청소 갯수 과다
-        </label>
-        <label>
-          <input type="checkbox" id="reasonEtc" name="timeReasonCheck" value="기타 사유" onchange="handleEtcReasonChange()">
-          기타 사유 (직접입력)
-        </label>
-      </div>
+<div class="reason-options">
+  <label>
+    <input type="checkbox" id="reasonReportedToBoss" name="timeReasonCheck" value="사장님 사전보고 완료">
+    사장님 사전보고 완료 (톡이나 메세지로소통할것)
+  </label>
+  <label>
+    <input type="checkbox" id="reasonBossMission" name="timeReasonCheck" value="사장님 특별미션">
+    사장님 특별미션
+  </label>
+  <label>
+    <input type="checkbox" id="reasonHeavyCleaning" name="timeReasonCheck" value="청소 갯수 과다">
+    청소 갯수 과다
+  </label>
+  <label>
+    <input type="checkbox" id="reasonEtc" name="timeReasonCheck" value="기타 사유" onchange="handleEtcReasonChange()">
+    기타 사유 (직접입력)
+  </label>
+</div>
       <div id="etcReasonInputSection" style="display:none;">
         <textarea id="etcReasonText" placeholder="기타 사유를 입력하세요."></textarea>
       </div>
