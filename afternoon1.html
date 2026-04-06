@@ -427,15 +427,14 @@ async function submitForm() {
   const timeVariationText = formatTimeDiffText(diffMinutes);
 
   const text =
-`[출근보고]
+`[오후 출근보고]
 근로자: ${worker}
 제출시각: ${submittedAtText}
 
 청소객실+공실객실 점검 계획: ${plan.length}개
 ${planRoomsText}
 
-노쇼구분: ${noshowMode}
-노쇼객실: ${noshowText}
+노쇼: ${noshowMode} / 노쇼객실: ${noshowText}
 
 출근시간 변동사유: ${timeReasonText}
 
