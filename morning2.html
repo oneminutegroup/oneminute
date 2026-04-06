@@ -311,24 +311,24 @@ button {
   <div id="timeReasonSection" style="display:none;">
     <label class="main-label">퇴근시간 변동사유</label>
     <div class="reason-box">
-<div class="reason-options">
-  <label>
-    <input type="checkbox" id="reasonReportedToBoss" name="timeReasonCheck" value="사장님 사전보고 완료">
-    사장님 사전보고 완료 (톡이나 메세지로 기록남겨주세요)
-  </label>
-  <label>
-    <input type="checkbox" id="reasonBossMission" name="timeReasonCheck" value="사장님 특별미션">
-    사장님 특별미션
-  </label>
-  <label>
-    <input type="checkbox" id="reasonHeavyCleaning" name="timeReasonCheck" value="청소 갯수 과다">
-    청소 갯수 과다
-  </label>
-  <label>
-    <input type="checkbox" id="reasonEtc" name="timeReasonCheck" value="기타 사유" onchange="handleEtcReasonChange()">
-    기타 사유 (직접입력)
-  </label>
-</div>
+      <div class="reason-options">
+        <label>
+          <input type="checkbox" id="reasonReportedToBoss" name="timeReasonCheck" value="사장님 사전보고 완료">
+          사장님 사전보고 완료 (톡이나 메세지로 기록남겨주세요)
+        </label>
+        <label>
+          <input type="checkbox" id="reasonBossMission" name="timeReasonCheck" value="사장님 특별미션">
+          사장님 특별미션
+        </label>
+        <label>
+          <input type="checkbox" id="reasonHeavyCleaning" name="timeReasonCheck" value="청소 갯수 과다">
+          청소 갯수 과다
+        </label>
+        <label>
+          <input type="checkbox" id="reasonEtc" name="timeReasonCheck" value="기타 사유" onchange="handleEtcReasonChange()">
+          기타 사유 (직접입력)
+        </label>
+      </div>
       <div id="etcReasonInputSection" style="display:none;">
         <textarea id="etcReasonText" placeholder="기타 사유를 입력하세요."></textarea>
       </div>
@@ -525,6 +525,7 @@ async function submitForm() {
   const memo = document.getElementById("memo").value.trim();
   const extraWorkTime = document.getElementById("extraWorkTime").value;
 
+  const reasonReportedToBoss = document.getElementById("reasonReportedToBoss").checked;
   const reasonBossMission = document.getElementById("reasonBossMission").checked;
   const reasonHeavyCleaning = document.getElementById("reasonHeavyCleaning").checked;
   const reasonEtc = document.getElementById("reasonEtc").checked;
@@ -574,7 +575,7 @@ async function submitForm() {
       return;
     }
 
-    if (!reasonBossMission && !reasonHeavyCleaning && !reasonEtc) {
+    if (!reasonReportedToBoss && !reasonBossMission && !reasonHeavyCleaning && !reasonEtc) {
       alert("퇴근시간 변동 사유를 선택해주세요");
       return;
     }
@@ -597,6 +598,7 @@ async function submitForm() {
   }
 
   const timeReasonList = [];
+  if (reasonReportedToBoss) timeReasonList.push("사장님 사전보고 완료");
   if (reasonBossMission) timeReasonList.push("사장님 특별미션");
   if (reasonHeavyCleaning) timeReasonList.push("청소 갯수 과다");
   if (reasonEtc) timeReasonList.push(`기타 사유: ${etcReasonText}`);
@@ -652,6 +654,7 @@ ${vacantText}
 
     time_reason_checks: timeReasonList,
     time_reason_text: timeReasonText,
+    time_reason_reported_to_boss: reasonReportedToBoss ? "예" : "아니오",
     time_reason_boss_mission: reasonBossMission ? "예" : "아니오",
     time_reason_heavy_cleaning: reasonHeavyCleaning ? "예" : "아니오",
     time_reason_etc_checked: reasonEtc ? "예" : "아니오",
