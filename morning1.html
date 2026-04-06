@@ -433,7 +433,7 @@ function formatTimeDiffText(diffMinutes) {
 function getWarningMessage() {
   return `정규출근시간은 ${settings.regularTime}입니다. 시간을 준수해주세요.
 정규시간보다 ${settings.reasonMinutes}분 이상 변동시 사유를 선택해야 합니다.
-(사전협의된 날 외에는 출근시간을 지켜주세요, 퇴근 시간은 조절이 가능해도 출근은 아닙니다)`;
+(시간 자동입력되며 사전협의 없는 조기출근은 근무시간 인정 안됩니다.)`;
 }
 
 function showTimeReasonField() {
